@@ -43,15 +43,15 @@ app.post('/order', function (req, res) {
 
 app.post('/confirm', function(req, res) {
   console.log( "CONFIRM: " );
-  console.log( req.body );
   var json = req.body;
+  console.log( json );
   var cMsg = JSON.stringify( req.body, null, 4 ).toUpperCase();
   console.log( cMsg );
-  var orderId = json.action.slice(1);
-  var action = json.action.slice(0,1);
+  var orderId = json.body.slice(1);
+  var action = json.body.slice(0,1);
   console.log( "ORDER ID: ", orderId );
   console.log( "ACTION TYPE: ", action ); 
-  doAction( action, orderId, res );
+  doAction( json.body, orderId, res );
 })
 
 function doAction( action, orderId, res ){
