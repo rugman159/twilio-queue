@@ -42,6 +42,8 @@ app.post('/order', function (req, res) {
 })
 
 app.post('/confirm', function(req, res) {
+  console.log( "CONFIRM: " );
+  console.log( req.body );
   var json = req.body;
   var cMsg = JSON.stringify( req.body, null, 4 ).toUpperCase();
   console.log( cMsg );
