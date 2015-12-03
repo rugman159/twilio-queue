@@ -1,8 +1,9 @@
+var keys = require( './keys.js' );
 // Your accountSid and authToken from twilio.com/user/account
-var accountSid = 'AC27e02f49f17a1570a8711c48f4c02b8c';
-var authToken = "9c669a7be059c1f87282b5992f9a44ac";
-var twilioNumber = "+14582022610";
-var numbers = [{ "courier" : "rug" , "number" : "5412803322"  }];
+var accountSid = keys.accountSid; //string
+var authToken = keys.authToken; //string
+var twilioNumber = keys.twilioNumber; //string
+var numbers = keys.couriers; // [ { "courier": "name", "number": "phone#"},{}... ]
 var client = require('twilio')(accountSid, authToken);
 
 module.exports = new function() {    

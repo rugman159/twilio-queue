@@ -19,7 +19,7 @@ var server = app.listen(4040, function () {
 });
 
 //continually run sendMessages every x seconds
-setInterval( sendMessages, 15000 );
+setInterval( sendMessages, 60000 );
 
 app.post('/order', function (req, res) {
 
@@ -28,7 +28,7 @@ app.post('/order', function (req, res) {
 		json.recTime = getDateTime()
 
 		pendingOrders.push( json )
-		res.send( "Received order!" )
+		res.send( response( "Received order!" ) )
 
 		fs.appendFile( 'order_log.txt', JSON.stringify( json, null, 4 ), function(err){
 			if (err) console.log( "ERROR: ", getDateTime(), err )
@@ -43,15 +43,15 @@ app.post('/order', function (req, res) {
 
 app.post('/confirm', function(req, res) {
   console.log( "CONFIRM: " );
-  var json = req.body;
+  var json =  req.body;
   console.log( json );
   var cMsg = JSON.stringify( req.body, null, 4 ).toUpperCase();
   console.log( cMsg );
-  var orderId = json.body.slice(1);
-  var action = json.body.slice(0,1);
+  var orderId = json.Body.slice(1);
+  var action = json.Body.slice(0,1);
   console.log( "ORDER ID: ", orderId );
   console.log( "ACTION TYPE: ", action ); 
-  doAction( json.body, orderId, res );
+  doAction( action, orderId, res );
 })
 
 function doAction( action, orderId, res ){
@@ -60,54 +60,60 @@ function doAction( action, orderId, res ){
     var foundOld; 
     if ( action == "A" ) {
       if ( found === false ){ 
-        res.send( "ORDER " + orderId + " NOT FOUND. WRONG ID?" )
+        res.send( response( "ORDER " + orderId + " NOT FOUND. WRONG ID?" ) )
         console.log( "ORDER ", orderId, " NOT FOUND. WRONG ID?" )
       }
       else {
         acceptOrder( found );
         console.log( "ACCEPTED: ", orderId );
-        res.send( "ACCEPTED: " + orderId );
+        res.send( response( "ACCEPTED: " + orderId ) );
       }
     }
     else if (action == "S") {
       foundOld = findOrder( orderId, completeOrders );
       if ( found !== false ) {
-        res.send( "STATUS: OPEN" );
+        res.send( response( "STATUS: OPEN" ) );
         console.log( "STATUS: OPEN" );
       }
       else if ( foundOld !== false ) {
-        res.send( "STATUS: ACCEPTED" );
+        res.send( response( "STATUS: ACCEPTED" ) );
         console.log( "STATUS: ACCEPTED" );
       }
       else {
-        res.send( "ORDER " + orderId + " NOT FOUND. WRONG ID?" )
+        res.send( response( "ORDER " + orderId + " NOT FOUND. WRONG ID?" ) )
         console.log( "ORDER ", orderId, " NOT FOUND. WRONG ID?" )
       }
     }
     else if (action == "R") {
       foundOld = findOrder( orderId, completeOrders );
       if (found !== false) {
-        res.send( pendingOrders[ found ] );
+        res.send( response( pendingOrders[ found ] ));
         console.log( pendingOrders[ found ] );
       }
       else if (foundOld !== false) {
-        res.send( completeOrders[ foundOld ] );
+        res.send( response (completeOrders[ foundOld ] ));
         console.log( completeOrders[ foundOld ] );
       }
       else {
-        res.send( "ORDER " + orderId + " NOT FOUND. WRONG ID?" )
+        res.send( response("ORDER " + orderId + " NOT FOUND. WRONG ID?" ))
         console.log( "ORDER ", orderId, " NOT FOUND. WRONG ID?" )
       }
     }
     else {
       console.log( "VALID LETTER REQUIRED" );
-      res.send( "VALID LETTER REQUIRED" );
+      res.send( response( "VALID LETTER REQUIRED" ));
     }
   }
   catch(e) {
     console.log( e.message )
     //res.send( e.message )
   }
+}
+
+function response( message ){
+ //wrap the message to be sent to twilio api
+ var msg = "<Response><Message>" + message + "</Message></Response>";
+ return msg;
 }
 
 function findOrder( orderId, orders ){
