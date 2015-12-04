@@ -19,8 +19,8 @@ var server = app.listen(4040, function () {
 });
 
 //continually run sendMessages every x seconds
-//var time = 60000; //1 min
-var time = 5000; //5 seconds
+var time = 120000; //2 min
+//var time = 5000; //5 seconds
 setInterval( sendMessages, time );
 
 app.post('/order', function (req, res) {
