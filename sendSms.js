@@ -1,10 +1,60 @@
 var keys = require( './keys.js' );
+var fs = require('fs');
 // Your accountSid and authToken from twilio.com/user/account
-var accountSid = keys.accountSid; //string
-var authToken = keys.authToken; //string
-var twilioNumber = keys.twilioNumber; //string
-var numbers = keys.couriers; // [ { "courier": "name", "number": "phone#"},{}... ]
-var client = require('twilio')(accountSid, authToken);
+var accountSid; //string
+var authToken; //string
+var twilioNumber; //string
+var numbers; // [ { "courier": "name", "number": "phone#"},{}... ]
+var client;
+
+function findValidKey( curKey ){
+  accountSid = keys[curKey].accountSid;
+  authToken = keys[curKey].authToken;
+  twilioNumber = keys[curKey].twilioNumber; 
+  numbers = keys[curKey].couriers; 
+}
+
+function _sendSms(json,message){
+  keys.forEach( function( key, keyIndex, keys){
+      findValidKey( keyIndex );
+      if (keys[keyIndex].valid){
+        client = require('twilio')(accountSid, authToken);
+
+        numbers.forEach( function( number, numIndex, numbers ) {
+          client.messages.create({
+              body: message,
+              to: number.number,
+              from: twilioNumber
+          }, 
+          function(err, message) {
+            if (err ) { 
+                console.log("ERROR SENDING: ")
+                console.log( err )
+                //process.stdout.write( err )
+                console.log( "\r" );
+                keys[keyIndex].valid = false;
+                if (keyIndex + 1 < keys.length){
+                  keys[keyIndex + 1].valid = true;
+                }
+   
+            }
+            else {
+              console.log( "MESSAGE SENT: ");
+              console.log( " ORDER ID: ", json.id);
+              console.log( " TO: ", number.courier, " - ", number.number );
+              process.stdout.write( " " + message.sid)
+              console.log( "\r" );
+            }
+          });
+        })
+      }
+      else
+      {
+        //var error = "ACCOUNT " + keyIndex + " INVALID! IGNORING";
+        //console.log( error );
+      }
+  })
+}
 
 module.exports = new function() {    
   this.sendSms = function( json ) {
@@ -17,25 +67,7 @@ module.exports = new function() {
                                           message = message + "A" + json.id + " - to accept.\r"
                                           message = message + "S" + json.id + " - for status.\r"
                                           /*message = message + "R" + json.id + " - to resend.\r"*/
-    numbers.forEach( function( number, numIndex, numbers ) {
-      client.messages.create({
-          body: message,
-          to: number.number,
-          from: twilioNumber
-      }, function(err, message) {
-          if (err ) { 
-            console.log("ERROR SENDING: ")
-            process.stdout.write(message.sid)
-            console.log( "\r" );
-          }
-          else {
-            console.log( "MESSAGE SENT: ");
-            console.log( " ORDER ID: ", json.id);
-            console.log( " TO: ", number.courier, " - ", number.number );
-            process.stdout.write( " " + message.sid)
-            console.log( "\r" );
-          }
-      });
-    })
+    _sendSms(json,message);
   }
 }
+
