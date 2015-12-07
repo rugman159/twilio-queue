@@ -20,8 +20,10 @@ var server = app.listen(4040, function () {
 });
 
 //continually run sendMessages every x seconds
-var sendEvery = 120000; //2 min
+//var sendEvery = 120000; //2 min
 //var sendEvery = 5000; //5 seconds
+var sendEvery = 6 * 5000; //5 seconds
+
 setInterval( sendMessages, sendEvery );
 
 app.post('/order', function (req, res) {
@@ -37,8 +39,8 @@ app.post('/order', function (req, res) {
 		sendMessages();
 
 		fs.appendFile( 'order_log.txt', JSON.stringify( json, null, 4 ), function(err){
-			if (err) console.log( "ERROR: ", getDateTime(), err )
-			//console.log( getDateTime(), json)
+			if (err) console.log( "ERROR: ", moment().format(), err )
+			//console.log( moment().format(), json)
 		});
 	}
 	catch(e) {
@@ -165,6 +167,6 @@ function sendMessages() {
     console.log( "PENDING ORDERS \r" );
     console.log( pendingOrders );
   }
-  else { console.log( "All messages sent", getDateTime() ) }
+  else { console.log( "All messages sent", moment().format() ) }
 }
 
