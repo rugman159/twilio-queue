@@ -32,7 +32,7 @@ function _sendSms(json,message){
 					console.log( " LAST SEND (SEC): ", timeDiff );
 					console.log( " NEW: ", json.statusNew );
 			
-					if( timeDiff > 100 || json.statusNew === true){
+					if( timeDiff > 150 || json.statusNew === true){
 					//to prevent spam - send if new or older than 100 seconds
 							json.statusNew = false; //set to old after first send
 							json.sentTime = curTime;

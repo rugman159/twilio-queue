@@ -69,9 +69,9 @@ function doAction( action, orderId, res ){
 	foundOld = findOrder( orderId, completeOrders );
 	action = action.toUpperCase();
 	console.log( "found: ", found );
-	console.log( pendingOrders );
+	//console.log( pendingOrders );
 	console.log( "foundOld: ", foundOld);
-	console.log( completeOrders );
+	//console.log( completeOrders );
 
     if ( action == "A" ) {
       if ( found === false && foundOld === false){ 
