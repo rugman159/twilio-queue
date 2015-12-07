@@ -2,6 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var fs = require("fs");
 var send = require("./sendSms.js");
+var moment = require('moment');
 
 var app = express();
 var cd = __dirname;
@@ -19,18 +20,21 @@ var server = app.listen(4040, function () {
 });
 
 //continually run sendMessages every x seconds
-var time = 120000; //2 min
-//var time = 5000; //5 seconds
-setInterval( sendMessages, time );
+var sendEvery = 120000; //2 min
+//var sendEvery = 5000; //5 seconds
+setInterval( sendMessages, sendEvery );
 
 app.post('/order', function (req, res) {
 
 	try {
 		var json = req.body
-		json.recTime = getDateTime()
+		json.recTime = moment().format();
+		json.statusNew = true;
+		json.sentTime = "";
 
 		pendingOrders.push( json )
 		res.send( response( "Received order!" ) )
+		sendMessages();
 
 		fs.appendFile( 'order_log.txt', JSON.stringify( json, null, 4 ), function(err){
 			if (err) console.log( "ERROR: ", getDateTime(), err )
@@ -46,9 +50,9 @@ app.post('/order', function (req, res) {
 app.post('/confirm', function(req, res) {
   console.log( "CONFIRM: " );
   var json =  req.body;
-  console.log( json );
+  //console.log( json );
   var cMsg = JSON.stringify( req.body, null, 4 ).toUpperCase();
-  console.log( cMsg );
+  //console.log( cMsg );
   var orderId = json.Body.slice(1);
   var action = json.Body.slice(0,1);
   console.log( "ORDER ID: ", orderId );
@@ -60,11 +64,22 @@ function doAction( action, orderId, res ){
   try {
     var found = findOrder( orderId, pendingOrders );
     var foundOld; 
+	foundOld = findOrder( orderId, completeOrders );
+	action = action.toUpperCase();
+	console.log( "found: ", found );
+	console.log( pendingOrders );
+	console.log( "foundOld: ", foundOld);
+	console.log( completeOrders );
+
     if ( action == "A" ) {
-      if ( found === false ){ 
+      if ( found === false && foundOld === false){ 
         res.send( response( "ORDER " + orderId + " NOT FOUND. WRONG ID?" ) )
         console.log( "ORDER ", orderId, " NOT FOUND. WRONG ID?" )
       }
+	  else if ( foundOld !== false ) {
+		res.send( response( "ALREADY ACCEPTED: ", orderId ) );
+		console.log( "ALREADY ACCPETED: ", orderId );
+	  }
       else {
         acceptOrder( found );
         console.log( "ACCEPTED: ", orderId );
@@ -72,12 +87,13 @@ function doAction( action, orderId, res ){
       }
     }
     else if (action == "S") {
-      foundOld = findOrder( orderId, completeOrders );
+      //foundOld = findOrder( orderId, completeOrders );
       if ( found !== false ) {
         res.send( response( "STATUS: OPEN" ) );
         console.log( "STATUS: OPEN" );
       }
       else if ( foundOld !== false ) {
+	  console.log( foundOld );
         res.send( response( "STATUS: ACCEPTED" ) );
         console.log( "STATUS: ACCEPTED" );
       }
@@ -119,7 +135,6 @@ function response( message ){
 }
 
 function findOrder( orderId, orders ){
-  console.log( findOrder );
   var found = false;
   if ( orders.length == 0 ) return found;
   orders.forEach( function( order, orderIndex, orders ){
@@ -153,27 +168,3 @@ function sendMessages() {
   else { console.log( "All messages sent", getDateTime() ) }
 }
 
-function getDateTime() {
-
-    var date = new Date();
-
-    var hour = date.getHours();
-    hour = (hour < 10 ? "0" : "") + hour;
-
-    var min  = date.getMinutes();
-    min = (min < 10 ? "0" : "") + min;
-
-    var sec  = date.getSeconds();
-    sec = (sec < 10 ? "0" : "") + sec;
-
-    var year = date.getFullYear();
-
-    var month = date.getMonth() + 1;
-    month = (month < 10 ? "0" : "") + month;
-
-    var day  = date.getDate();
-    day = (day < 10 ? "0" : "") + day;
-
-    return year + ":" + month + ":" + day + ":" + hour + ":" + min + ":" + sec;
-
-}

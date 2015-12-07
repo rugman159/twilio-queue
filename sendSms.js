@@ -1,5 +1,6 @@
 var keys = require( './keys.js' );
 var fs = require('fs');
+var moment = require('moment');
 // Your accountSid and authToken from twilio.com/user/account
 var accountSid; //string
 var authToken; //string
@@ -21,31 +22,47 @@ function _sendSms(json,message){
         client = require('twilio')(accountSid, authToken);
 
         numbers.forEach( function( number, numIndex, numbers ) {
-          client.messages.create({
-              body: message,
-              to: number.number,
-              from: twilioNumber
-          }, 
-          function(err, message) {
-            if (err ) { 
-                console.log("ERROR SENDING: ")
-                console.log( err )
-                //process.stdout.write( err )
-                console.log( "\r" );
-                keys[keyIndex].valid = false;
-                if (keyIndex + 1 < keys.length){
-                  keys[keyIndex + 1].valid = true;
-                }
-   
-            }
-            else {
-              console.log( "MESSAGE SENT: ");
-              console.log( " ORDER ID: ", json.id);
-              console.log( " TO: ", number.courier, " - ", number.number );
-              process.stdout.write( " " + message.sid)
-              console.log( "\r" );
-            }
-          });
+					var recTime = json.recTime;
+					var curTime = moment().format();
+					var sentTime = json.sentTime;
+					var timeDiff = moment().diff(sentTime, "seconds");
+					console.log( "MESSAGE: ", json.id );
+					console.log( " SENT TIME: ", sentTime );
+					console.log( " CURRENT TIME: ", curTime );
+					console.log( " LAST SEND (SEC): ", timeDiff );
+					console.log( " NEW: ", json.statusNew );
+			
+					if( timeDiff > 100 || json.statusNew === true){
+					//to prevent spam - send if new or older than 100 seconds
+							json.statusNew = false; //set to old after first send
+							json.sentTime = curTime;
+
+							client.messages.create({
+									body: message,
+									to: number.number,
+									from: twilioNumber
+							}, 
+							function(err, message) {
+								if (err ) { 
+										console.log("ERROR SENDING: ")
+										console.log( err )
+										//process.stdout.write( err )
+										console.log( "\r" );
+										keys[keyIndex].valid = false;
+										if (keyIndex + 1 < keys.length){
+											keys[keyIndex + 1].valid = true;
+										}
+			 
+								}
+								else {
+									console.log( "MESSAGE SENT: ");
+									console.log( " ORDER ID: ", json.id);
+									console.log( " TO: ", number.courier, " - ", number.number );
+									process.stdout.write( " " + message.sid)
+									console.log( "\r" );
+								}
+							});
+					}
         })
       }
       else
