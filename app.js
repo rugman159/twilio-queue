@@ -85,7 +85,7 @@ function doAction( action, orderId, res ){
       else {
         acceptOrder( found );
         console.log( "ACCEPTED: ", orderId );
-        res.send( response( "ACCEPTED: " + orderId ) );
+        //res.send( response( "ACCEPTED: " + orderId ) );
       }
     }
     else if (action == "S") {
